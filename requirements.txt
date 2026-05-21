@@ -5,4 +5,7 @@ together
 fpdf
 kaleido
 sqlalchemy
-bcrypt 
+bcrypt
+xlsxwriter
+plotly
+pandas

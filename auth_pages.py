@@ -1,5 +1,6 @@
 import streamlit as st
 from models import User, Session
+from session_utils import create_session
 import re
 
 def is_valid_email(email):
@@ -63,8 +64,11 @@ def show_login_page():
                 user = session.query(User).filter_by(email=email).first()
                 
                 if user and user.check_password(password):
+                    token = create_session(email)
                     st.session_state['authenticated'] = True
                     st.session_state['user_email'] = email
+                    st.session_state['session_token'] = token
+                    st.query_params['session'] = token
                     st.success("Login successful!")
                     st.rerun()
                 else:

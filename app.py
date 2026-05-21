@@ -23,7 +23,8 @@ from auth_pages import show_login_page, show_register_page
 from models import Session, User, Receipt, Budget
 
 # Set OpenAI API key
-openai.api_key = "ADD YOU OPENAI API KEY HERE"
+openai.api_key = "ADD YOUR OPENAI API KEY HERE"
+from session_utils import create_session, get_session, delete_session
 
 # Initialize session state variables
 if 'authenticated' not in st.session_state:
@@ -32,6 +33,16 @@ if 'show_register' not in st.session_state:
     st.session_state['show_register'] = False
 if 'user_email' not in st.session_state:
     st.session_state['user_email'] = None
+
+# Restore session from URL query param on refresh
+if not st.session_state['authenticated']:
+    token = st.query_params.get('session')
+    if token:
+        email = get_session(token)
+        if email:
+            st.session_state['authenticated'] = True
+            st.session_state['user_email'] = email
+            st.session_state['session_token'] = token
 
 # Show login/register pages if not authenticated
 if not st.session_state['authenticated']:
@@ -141,32 +152,115 @@ dynamic_root_css += "}\n"
 
 # Define the rest of the CSS template (without :root variables and without style tags)
 raw_css_template = """
-    html, body, [class*="css"]  {
+    /* ── Base ── */
+    html, body {
         font-family: 'Inter', 'Roboto', 'Segoe UI', Arial, sans-serif !important;
-        font-size: 17px;
-        color: var(--text-color);
-        background-color: var(--primary-bg);
+        background-color: var(--primary-bg) !important;
+        color: var(--text-color) !important;
     }
-    h1, h2, h3, h4 {
+
+    /* ── App containers ── */
+    .stApp,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stHeader"],
+    .main, .block-container {
+        background-color: var(--primary-bg) !important;
+        color: var(--text-color) !important;
+    }
+
+    /* ── Sidebar ── */
+    section[data-testid="stSidebar"],
+    section[data-testid="stSidebar"] > div:first-child,
+    [data-testid="stSidebarContent"] {
+        min-width: 320px !important;
+        max-width: 320px !important;
+        width: 320px !important;
+        box-sizing: border-box !important;
+        background-color: var(--secondary-bg) !important;
+    }
+
+    /* ── Transparent widget wrappers (prevent ghost dark boxes) ── */
+    [data-testid="stElementContainer"],
+    .element-container,
+    [data-testid="stVerticalBlock"],
+    [data-testid="stHorizontalBlock"] {
+        background: transparent !important;
+    }
+
+    /* ── Text ── */
+    p, span, li, td, th, small {
+        color: var(--text-color) !important;
+    }
+    h1, h2, h3, h4, h5, h6 {
         font-family: 'Inter', 'Roboto', 'Segoe UI', Arial, sans-serif !important;
-        color: var(--primary-color);
+        color: var(--primary-color) !important;
         font-weight: 700;
         letter-spacing: 0.01em;
     }
-    .stButton>button {
-        color: white;
-        background: var(--primary-color);
+
+    /* ── Radio / Checkbox labels ── */
+    .stRadio label, .stCheckbox label,
+    .stRadio label span, .stCheckbox label span {
+        color: var(--text-color) !important;
+    }
+
+    /* ── Inputs ── */
+    .stTextInput input, .stTextArea textarea,
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] textarea {
+        background-color: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border-color: var(--sub-border-color) !important;
+        border-radius: 8px !important;
+    }
+
+    /* ── File uploader ── */
+    [data-testid="stFileUploaderDropzone"],
+    [data-testid="stFileUploader"] section {
+        background-color: var(--card-bg) !important;
+        border: 2px dashed var(--border-color) !important;
+        border-radius: 10px !important;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] div,
+    [data-testid="stFileUploaderDropzoneInstructions"] span,
+    [data-testid="stFileUploaderDropzoneInstructions"] small,
+    [data-testid="stFileUploader"] small {
+        color: var(--text-color) !important;
+    }
+    [data-testid="stFileUploader"] button {
+        background-color: var(--secondary-bg) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--sub-border-color) !important;
+        border-radius: 6px !important;
+    }
+
+    /* ── Alerts / info boxes ── */
+    [data-testid="stInfo"], [data-testid="stAlert"],
+    [data-testid="stNotification"], .stAlert {
+        background-color: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border-radius: 8px !important;
+    }
+
+    /* ── Buttons ── */
+    .stButton > button {
+        color: white !important;
+        background: var(--primary-color) !important;
         border-radius: 8px;
         border: none;
         padding: 0.5em 1.5em;
-        font-size: 1.1em;
+        font-size: 1.05em;
         font-family: inherit;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        transition: background-color 0.3s ease;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        transition: background-color 0.2s ease;
     }
-    .stButton>button:hover {
-        background-color: var(--accent-color-1);
+    .stButton > button:hover {
+        background-color: var(--accent-color-1) !important;
     }
+
+    /* ── Custom cards ── */
     .category-card {
         background: var(--card-bg);
         padding: 1em 1.2em;
@@ -174,7 +268,7 @@ raw_css_template = """
         margin-bottom: 1em;
         border: 2px solid var(--border-color);
         min-height: 120px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
     }
     .item-card {
         background: var(--item-card-bg);
@@ -182,37 +276,15 @@ raw_css_template = """
         border-radius: 8px;
         margin-bottom: 0.5em;
         border: 1px solid var(--sub-border-color);
-        box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         text-align: left;
     }
-    .item-title {
-        color: var(--primary-color);
-        font-size: 1.08em;
-        font-weight: 600;
-        margin-bottom: 0.1em;
-    }
-    .item-desc {
-        color: var(--text-color);
-        font-size: 0.98em;
-        margin-bottom: 0.2em;
-        text-align: justify;
-    }
-    .item-detail {
-        color: var(--text-color);
-        margin-bottom: 0.1em;
-    }
-    .item-qty { color: var(--accent-color-1); };
-    .item-price { color: var(--accent-color-1); };
-    .item-subtotal { color: var(--accent-color-2); };
-    section[data-testid="stSidebar"],
-    section[data-testid="stSidebar"] > div,
-    section[data-testid="stSidebar"] > div > div,
-    [data-testid="stSidebarContent"] {
-        min-width: 320px !important;
-        max-width: 320px !important;
-        width: 320px !important;
-        box-sizing: border-box !important;
-    }
+    .item-title { color: var(--primary-color); font-size: 1.08em; font-weight: 600; }
+    .item-desc  { color: var(--text-color); font-size: 0.98em; text-align: justify; }
+    .item-detail { color: var(--text-color); }
+    .item-qty     { color: var(--accent-color-1); }
+    .item-price   { color: var(--accent-color-1); }
+    .item-subtotal{ color: var(--accent-color-2); }
 """
 
 # Combine dynamic :root with the rest of the CSS, and wrap in <style> tags
@@ -767,6 +839,10 @@ st.sidebar.markdown(
 )
 
 if st.sidebar.button("Logout", use_container_width=True):
+    token = st.session_state.get('session_token')
+    if token:
+        delete_session(token)
+    st.query_params.clear()
     st.session_state.clear()
     st.session_state['authenticated'] = False
     st.session_state['show_register'] = False
