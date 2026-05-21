@@ -23,7 +23,7 @@ from auth_pages import show_login_page, show_register_page
 from models import Session, User, Receipt, Budget
 
 # Set OpenAI API key
-openai.api_key = "ADD YOUR OPENAI API KEY HERE"
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 from session_utils import create_session, get_session, delete_session
 
 # Initialize session state variables
