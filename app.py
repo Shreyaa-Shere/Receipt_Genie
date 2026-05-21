@@ -204,6 +204,15 @@ raw_css_template = """
     .item-qty { color: var(--accent-color-1); };
     .item-price { color: var(--accent-color-1); };
     .item-subtotal { color: var(--accent-color-2); };
+    section[data-testid="stSidebar"],
+    section[data-testid="stSidebar"] > div,
+    section[data-testid="stSidebar"] > div > div,
+    [data-testid="stSidebarContent"] {
+        min-width: 320px !important;
+        max-width: 320px !important;
+        width: 320px !important;
+        box-sizing: border-box !important;
+    }
 """
 
 # Combine dynamic :root with the rest of the CSS, and wrap in <style> tags
