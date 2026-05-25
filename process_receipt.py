@@ -9,8 +9,7 @@ import os
 import sys
 import hashlib
 
-# Set OpenAI API key
-openai.api_key = "ADD YOU OPENAI API KEY HERE"
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 def encode_image(image_path):
     """Convert image to base64 encoding."""

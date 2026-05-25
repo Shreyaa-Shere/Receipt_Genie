@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.DS_Store
+
+# App data — not for source control
+users.db
+data/sessions.json
+data/gpt_usage_log.csv
+processed_receipt.json
