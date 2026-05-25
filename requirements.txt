@@ -2,7 +2,7 @@ streamlit
 openai
 pillow
 fpdf
-kaleido
+kaleido==0.2.1
 sqlalchemy
 bcrypt
 xlsxwriter
