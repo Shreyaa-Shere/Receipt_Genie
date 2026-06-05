@@ -708,12 +708,16 @@ elif page == "Budgets":
         if current_month not in unique_months:
             unique_months.append(current_month)
         unique_months.sort(reverse=True)  # Most recent first
-        
+
+        # Default to most recent month that has receipts, fall back to current month
+        months_with_data = sorted(set(r.date.strftime('%Y-%m') for r in all_receipts), reverse=True)
+        default_month = months_with_data[0] if months_with_data else current_month
+
         # Month selector
         selected_month = st.selectbox(
             "Select Month",
             unique_months,
-            index=unique_months.index(current_month) if current_month in unique_months else 0
+            index=unique_months.index(default_month) if default_month in unique_months else 0
         )
         
         # Determine if selected month is in the past
