@@ -22,6 +22,8 @@ import os.path
 from auth_pages import show_login_page, show_register_page
 from models import Session, User, Receipt, Budget
 
+st.set_page_config(page_title="Receipt NoteTaker", layout="wide")
+
 # Set OpenAI API key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 from session_utils import create_session, get_session, delete_session
@@ -83,8 +85,6 @@ def load_existing_hashes():
         except Exception as e:
             st.error(f"Error reading log file {log_file}: {e}")
     return existing_hashes
-
-st.set_page_config(page_title="Receipt NoteTaker", layout="wide")
 
 # Initialize session state variables if not already present
 if 'allow_duplicate_process' not in st.session_state:
@@ -171,14 +171,15 @@ raw_css_template = """
     }
 
     /* ── Sidebar ── */
-    section[data-testid="stSidebar"],
+    section[data-testid="stSidebar"] {
+        background-color: var(--secondary-bg) !important;
+        overflow: hidden !important;
+    }
+
     section[data-testid="stSidebar"] > div:first-child,
     [data-testid="stSidebarContent"] {
-        min-width: 320px !important;
-        max-width: 320px !important;
-        width: 320px !important;
-        box-sizing: border-box !important;
         background-color: var(--secondary-bg) !important;
+        box-sizing: border-box !important;
     }
 
     /* ── Transparent widget wrappers (prevent ghost dark boxes) ── */

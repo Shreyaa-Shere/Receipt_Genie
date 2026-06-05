@@ -11,6 +11,13 @@ def show_login_page():
     st.markdown(
         """
         <style>
+        .block-container,
+        [data-testid="stMainBlockContainer"] {
+            max-width: 600px !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            margin: 0 auto !important;
+        }
         .login-container, .register-container {
             max-width: 240px !important;
             margin: 0 auto !important;
@@ -45,41 +52,43 @@ def show_login_page():
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         st.markdown('<h1 class="login-title">Login to Receipt Genie</h1>', unsafe_allow_html=True)
 
-        email = st.text_input("Email", key="login_email")
-        password = st.text_input("Password", type="password", key="login_password")
-        
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            if st.button("Login", use_container_width=True):
-                if not email or not password:
-                    st.error("Please fill in all fields")
-                    return False
-                
-                if not is_valid_email(email):
-                    st.error("Please enter a valid email address")
-                    return False
-                
-                session = Session()
-                user = session.query(User).filter_by(email=email).first()
-                
-                if user and user.check_password(password):
-                    token = create_session(email)
-                    st.session_state['authenticated'] = True
-                    st.session_state['user_email'] = email
-                    st.session_state['session_token'] = token
-                    st.query_params['session'] = token
-                    st.success("Login successful!")
-                    st.rerun()
-                else:
-                    st.error("Invalid email or password")
-                session.close()
-        
-        with col2:
-            if st.button("Create Account", use_container_width=True):
-                st.session_state['show_register'] = True
+        with st.form("login_form"):
+            email = st.text_input("Email", key="login_email")
+            password = st.text_input("Password", type="password", key="login_password")
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                login_submitted = st.form_submit_button("Login", use_container_width=True)
+            with col2:
+                register_submitted = st.form_submit_button("Create Account", use_container_width=True)
+
+        if register_submitted:
+            st.session_state['show_register'] = True
+            st.rerun()
+
+        if login_submitted:
+            if not email or not password:
+                st.error("Please fill in all fields")
+                return False
+
+            if not is_valid_email(email):
+                st.error("Please enter a valid email address")
+                return False
+
+            session = Session()
+            user = session.query(User).filter_by(email=email).first()
+
+            if user and user.check_password(password):
+                token = create_session(email)
+                st.session_state['authenticated'] = True
+                st.session_state['user_email'] = email
+                st.session_state['session_token'] = token
+                st.query_params['session'] = token
+                st.success("Login successful!")
                 st.rerun()
-        
+            else:
+                st.error("Invalid email or password")
+            session.close()
+
         st.markdown('</div>', unsafe_allow_html=True)
         return False
 
@@ -87,6 +96,13 @@ def show_register_page():
     st.markdown(
         """
         <style>
+        .block-container,
+        [data-testid="stMainBlockContainer"] {
+            max-width: 600px !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            margin: 0 auto !important;
+        }
         .register-container {
             max-width: 200px;
             margin: 0 auto;
@@ -118,52 +134,54 @@ def show_register_page():
         st.markdown('<div class="register-container">', unsafe_allow_html=True)
         st.markdown('<h1 class="register-title">Create Account</h1>', unsafe_allow_html=True)
 
-        email = st.text_input("Email", key="register_email")
-        password = st.text_input("Password", type="password", key="register_password")
-        confirm_password = st.text_input("Confirm Password", type="password", key="register_confirm_password")
-        
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            if st.button("Register", use_container_width=True):
-                if not email or not password or not confirm_password:
-                    st.error("Please fill in all fields")
-                    return
-                
-                if not is_valid_email(email):
-                    st.error("Please enter a valid email address")
-                    return
-                
-                if password != confirm_password:
-                    st.error("Passwords do not match")
-                    return
-                
-                if len(password) < 6:
-                    st.error("Password must be at least 6 characters long")
-                    return
-                
-                session = Session()
-                existing_user = session.query(User).filter_by(email=email).first()
-                
-                if existing_user:
-                    st.error("Email already registered")
-                    session.close()
-                    return
-                
-                new_user = User(email=email)
-                new_user.set_password(password)
-                
-                session.add(new_user)
-                session.commit()
+        with st.form("register_form"):
+            email = st.text_input("Email", key="register_email")
+            password = st.text_input("Password", type="password", key="register_password")
+            confirm_password = st.text_input("Confirm Password", type="password", key="register_confirm_password")
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                register_submitted = st.form_submit_button("Register", use_container_width=True)
+            with col2:
+                back_submitted = st.form_submit_button("Back to Login", use_container_width=True)
+
+        if back_submitted:
+            st.session_state['show_register'] = False
+            st.rerun()
+
+        if register_submitted:
+            if not email or not password or not confirm_password:
+                st.error("Please fill in all fields")
+                return
+
+            if not is_valid_email(email):
+                st.error("Please enter a valid email address")
+                return
+
+            if password != confirm_password:
+                st.error("Passwords do not match")
+                return
+
+            if len(password) < 6:
+                st.error("Password must be at least 6 characters long")
+                return
+
+            session = Session()
+            existing_user = session.query(User).filter_by(email=email).first()
+
+            if existing_user:
+                st.error("Email already registered")
                 session.close()
-                
-                st.success("Account created successfully! Please login.")
-                st.session_state['show_register'] = False
-                st.rerun()
-        
-        with col2:
-            if st.button("Back to Login", use_container_width=True):
-                st.session_state['show_register'] = False
-                st.rerun()
-        
-        st.markdown('</div>', unsafe_allow_html=True) 
+                return
+
+            new_user = User(email=email)
+            new_user.set_password(password)
+
+            session.add(new_user)
+            session.commit()
+            session.close()
+
+            st.success("Account created successfully! Please login.")
+            st.session_state['show_register'] = False
+            st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
