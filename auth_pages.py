@@ -45,8 +45,8 @@ def show_login_page():
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         st.markdown('<h1 class="login-title">Login to Receipt Genie</h1>', unsafe_allow_html=True)
 
-        email = st.text_input("Email", value="", key="login_email")
-        password = st.text_input("Password", type="password", value="", key="login_password")
+        email = st.text_input("Email", key="login_email")
+        password = st.text_input("Password", type="password", key="login_password")
         
         col1, col2 = st.columns([1, 1])
         
@@ -118,9 +118,9 @@ def show_register_page():
         st.markdown('<div class="register-container">', unsafe_allow_html=True)
         st.markdown('<h1 class="register-title">Create Account</h1>', unsafe_allow_html=True)
 
-        email = st.text_input("Email", value="", key="register_email")
-        password = st.text_input("Password", type="password", value="", key="register_password")
-        confirm_password = st.text_input("Confirm Password", type="password", value="", key="register_confirm_password")
+        email = st.text_input("Email", key="register_email")
+        password = st.text_input("Password", type="password", key="register_password")
+        confirm_password = st.text_input("Confirm Password", type="password", key="register_confirm_password")
         
         col1, col2 = st.columns([1, 1])
         
